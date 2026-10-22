@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Мина с шипами и бликом; всё уложено в безопасную зону адаптивной иконки (радиус 33 от центра 54,54) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- шипы: вертикаль, горизонталь, две диагонали -->
+    <path
+        android:pathData="M54,22 L54,86"
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M22,54 L86,54"
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M31.3,31.3 L76.7,76.7"
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M76.7,31.3 L31.3,76.7"
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <!-- корпус мины -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M32,54 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 z" />
+    <!-- блик -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.85"
+        android:pathData="M42,47 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 z" />
+</vector>
