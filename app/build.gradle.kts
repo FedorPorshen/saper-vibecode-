@@ -20,24 +20,13 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        create("release") {
-            // Для личного использования подписываем release тем же debug-ключом:
-            // тогда release-APK ставится поверх debug без потери рекордов и прогресса.
-            storeFile = file("C:/Users/пп/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
-    }
-
     buildTypes {
         release {
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -70,12 +59,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
-// На этой машине имя пользователя Windows записано кириллицей («пп»), из-за чего
-// стандартная temp-папка (C:\Users\пп\...) ломает запуск тестового процесса.
-// Указываем тестовой JVM temp-папку из чисто латинских символов.
-val asciiTmpDir = file("C:/AndroidProjects/tmp")
-asciiTmpDir.mkdirs()
-
-tasks.withType<Test>().configureEach {
-    jvmArgs("-Djava.io.tmpdir=${asciiTmpDir.absolutePath.replace("\\", "/")}")
+// Переопределение для машин, где JVM тестов не работает с путём к TEMP.
+providers.gradleProperty("saperTestTmpDir").orNull?.let { path ->
+    val testTmpDir = file(path)
+    tasks.withType<Test>().configureEach {
+        jvmArgs("-Djava.io.tmpdir=${testTmpDir.absolutePath}")
+    }
 }
