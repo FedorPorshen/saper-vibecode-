@@ -134,6 +134,7 @@ internal fun BoardView(
                 }
                 .clipToBounds()
                 .drawWithCache {
+                    val paints = NumberPaints(cellPx)
                     onDrawBehind {
                         animFrame // тик анимации — перерисовка каждый кадр, пока она идёт
                         controller.version // версия игры — перерисовка при любом изменении
@@ -141,7 +142,7 @@ internal fun BoardView(
                             translate(offset.x, offset.y)
                             scale(scale, scale, pivot = Offset.Zero)
                         }) {
-                            drawClassicBoard(controller, cellPx, System.nanoTime(), showAnalysis)
+                            drawClassicBoard(controller, cellPx, paints, System.nanoTime(), showAnalysis)
                         }
                         val lostStart = controller.lostAnimStartNs
                         if (controller.phase == Phase.LOST && lostStart > 0L) {

@@ -9,8 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,6 +33,34 @@ internal fun Modifier.classicBevel(inset: Boolean = false): Modifier = drawWithC
     drawLine(top, Offset(edge, edge), Offset(edge, size.height - edge), stroke)
     drawLine(bottom, Offset(edge, size.height - edge), Offset(size.width - edge, size.height - edge), stroke)
     drawLine(bottom, Offset(size.width - edge, edge), Offset(size.width - edge, size.height - edge), stroke)
+}
+
+internal fun DrawScope.drawRaisedCellEdges(left: Float, top: Float, dimensions: Size, bevel: Float) {
+    val right = left + dimensions.width
+    val bottom = top + dimensions.height
+    drawPath(Path().apply {
+        moveTo(left, bottom)
+        lineTo(left, top)
+        lineTo(right, top)
+        lineTo(right - bevel, top + bevel)
+        lineTo(left + bevel, top + bevel)
+        lineTo(left + bevel, bottom - bevel)
+        close()
+    }, Color.White)
+    drawPath(Path().apply {
+        moveTo(left, bottom)
+        lineTo(left + bevel, bottom - bevel)
+        lineTo(right - bevel, bottom - bevel)
+        lineTo(right - bevel, top + bevel)
+        lineTo(right, top)
+        lineTo(right, bottom)
+        close()
+    }, Color(0xFF808080))
+}
+
+internal fun Modifier.closedCellSurface(): Modifier = background(Color(0xFFBDBDBD)).drawWithContent {
+    drawContent()
+    drawRaisedCellEdges(0f, 0f, size, 4.dp.toPx())
 }
 
 @Composable
@@ -52,7 +83,7 @@ internal fun ClassicTitleBar(title: String, onMenu: (() -> Unit)? = null) {
 @Composable
 internal fun ClassicButton(label: String, onClick: () -> Unit) {
     Box(
-        Modifier.background(WindowPanel).classicBevel()
+        Modifier.closedCellSurface()
             .clickable(role = Role.Button, onClick = onClick)
             .heightIn(min = 48.dp).padding(horizontal = 12.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center

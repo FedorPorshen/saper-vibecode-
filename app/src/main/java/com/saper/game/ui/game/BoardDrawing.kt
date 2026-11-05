@@ -3,9 +3,12 @@ package com.saper.game.ui.game
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import com.saper.game.ui.theme.drawRaisedCellEdges
 import com.saper.game.game.Board
 import com.saper.game.game.CellState
 
@@ -26,16 +29,27 @@ private val NumberColors = listOf(
     Color(0xFF800000), Color(0xFF008080), Color(0xFF000000), Color(0xFF808080)
 )
 
-private val NumberPixels = listOf(
-    listOf("00100", "01100", "00100", "00100", "00100", "00100", "01110"),
-    listOf("01110", "11011", "00011", "00110", "01100", "11000", "11111"),
-    listOf("11110", "00011", "00011", "01110", "00011", "00011", "11110"),
-    listOf("00110", "01110", "11010", "11010", "11111", "00010", "00010"),
-    listOf("11111", "11000", "11000", "11110", "00011", "00011", "11110"),
-    listOf("01110", "11000", "11000", "11110", "11011", "11011", "01110"),
-    listOf("11111", "00011", "00110", "00110", "01100", "01100", "01100"),
-    listOf("01110", "11011", "11011", "01110", "11011", "11011", "01110")
-)
+/** Кисти для цифр, строятся один раз на размер клетки. */
+internal class NumberPaints(private val cellPx: Float) {
+    private val paints = NumberColors.map { c ->
+        android.graphics.Paint().apply {
+            color = c.toArgb()
+            isAntiAlias = true
+            textSize = cellPx * 0.55f
+            textAlign = android.graphics.Paint.Align.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+        }
+    }
+    private val centerFix = -(paints[0].ascent() + paints[0].descent()) / 2f
+
+    /** Цифра n в точке (cx, cy); progress 0..1 — анимация появления (прозрачность + рост). */
+    fun drawNumber(canvas: android.graphics.Canvas, n: Int, cx: Float, cy: Float, progress: Float = 1f) {
+        val p = paints[n - 1]
+        p.alpha = (255 * progress).toInt().coerceIn(0, 255)
+        p.textSize = cellPx * 0.55f * (0.55f + 0.45f * progress)
+        canvas.drawText(n.toString(), cx, cy + centerFix, p)
+    }
+}
 
 private val MinePixels = listOf(
     "000010000", "010010010", "001111100", "001011100", "111111111",
@@ -68,6 +82,7 @@ private fun DrawScope.drawCellPixels(
 internal fun DrawScope.drawClassicBoard(
     controller: GameController,
     cellPx: Float,
+    paints: NumberPaints,
     nowNs: Long,
     showAnalysis: Boolean
 ) {
@@ -88,7 +103,7 @@ internal fun DrawScope.drawClassicBoard(
             val revealedMine = lost && isMine && state != CellState.FLAGGED
             when {
                 revealedMine -> drawMine(left, top, cellPx, hit = lostAt == (x to y))
-                state == CellState.OPEN -> drawOpen(left, top, cellPx, cell!!.adjacentMines, openProgress(controller, x, y, nowNs))
+                state == CellState.OPEN -> drawOpen(left, top, cellPx, cell!!.adjacentMines, paints, openProgress(controller, x, y, nowNs))
                 else -> {
                     val flagged = state == CellState.FLAGGED
                     if (!flagged && (x to y) in depressCells) {
@@ -158,27 +173,7 @@ private fun flagProgress(controller: GameController, x: Int, y: Int, nowNs: Long
 
 private fun DrawScope.drawClosed(left: Float, top: Float, cell: Float, flagged: Boolean, hint: Boolean, wrongFlag: Boolean, flagAlpha: Float) {
     drawRect(ClassicColors.GrayBg, topLeft = Offset(left, top), size = Size(cell, cell))
-    val bevel = cell * 0.11f
-    val right = left + cell
-    val bottom = top + cell
-    drawPath(Path().apply {
-        moveTo(left, bottom)
-        lineTo(left, top)
-        lineTo(right, top)
-        lineTo(right - bevel, top + bevel)
-        lineTo(left + bevel, top + bevel)
-        lineTo(left + bevel, bottom - bevel)
-        close()
-    }, ClassicColors.BevelLight)
-    drawPath(Path().apply {
-        moveTo(left, bottom)
-        lineTo(left + bevel, bottom - bevel)
-        lineTo(right - bevel, bottom - bevel)
-        lineTo(right - bevel, top + bevel)
-        lineTo(right, top)
-        lineTo(right, bottom)
-        close()
-    }, ClassicColors.BevelDark)
+    drawRaisedCellEdges(left, top, Size(cell, cell), cell * 0.11f)
     if (hint) {
         drawRect(ClassicColors.Yellow, topLeft = Offset(left, top), size = Size(cell, cell), style = Stroke(cell * 0.09f))
     }
@@ -197,12 +192,13 @@ private fun DrawScope.drawDepressed(left: Float, top: Float, cell: Float) {
     drawRect(ClassicColors.OpenBorder, topLeft = Offset(left, top), size = Size(cell, cell), style = Stroke(1.5f))
 }
 
-private fun DrawScope.drawOpen(left: Float, top: Float, cell: Float, number: Int, progress: Float) {
+private fun DrawScope.drawOpen(left: Float, top: Float, cell: Float, number: Int, paints: NumberPaints, progress: Float) {
     drawRect(ClassicColors.GrayBg, topLeft = Offset(left, top), size = Size(cell, cell))
     drawRect(ClassicColors.OpenBorder, topLeft = Offset(left, top), size = Size(cell, cell), style = Stroke(1.5f))
     if (number > 0) {
-        val pixel = cell * 0.10f * (0.55f + 0.45f * progress)
-        drawCellPixels(NumberPixels[number - 1], NumberColors[number - 1], left, top, cell, pixel, progress)
+        val cx = left + cell / 2f
+        val cy = top + cell / 2f
+        drawIntoCanvas { canvas -> paints.drawNumber(canvas.nativeCanvas, number, cx, cy, progress) }
     }
     if (progress < 1f) {
         // белая вспышка, гаснущая по мере «проявления» клетки

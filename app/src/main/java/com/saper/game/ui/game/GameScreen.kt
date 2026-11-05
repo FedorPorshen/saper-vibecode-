@@ -222,10 +222,8 @@ private fun ClassicTopBar(controller: GameController) {
         else mines.toString().padStart(3, '0')
         LedCounter(mineDigits, "Мины: $mines")
         SmileyButton(controller)
-        val elapsed = controller.elapsedSeconds.coerceAtMost(5999)
-        val time = (elapsed / 60).toString().padStart(2, '0') + ":" +
-            (elapsed % 60).toString().padStart(2, '0')
-        LedCounter(time, "Время: $time")
+        val elapsed = controller.elapsedSeconds.coerceAtMost(999)
+        LedCounter(elapsed.toString().padStart(3, '0'), "Время: $elapsed сек")
     }
 }
 
@@ -237,7 +235,7 @@ private val LedSegments = listOf(
 
 @Composable
 private fun LedCounter(digits: String, label: String) {
-    val units = digits.length * 11 - digits.count { it == ':' } * 7
+    val units = digits.length * 11
     Canvas(
         Modifier.background(Color.Black)
             .classicBevel(inset = true)
@@ -264,12 +262,6 @@ private fun LedCounter(digits: String, label: String) {
         }
 
         for (digit in digits) {
-            if (digit == ':') {
-                drawRect(lit, Offset(x + pixel, y + 5 * pixel), Size(2 * pixel, 2 * pixel))
-                drawRect(lit, Offset(x + pixel, y + 11 * pixel), Size(2 * pixel, 2 * pixel))
-                x += 4 * pixel
-                continue
-            }
             val mask = if (digit == '-') "0000001" else LedSegments[digit.digitToInt()]
             segment(2, 0, false, mask[0] == '1')
             segment(8, 1, true, mask[1] == '1')

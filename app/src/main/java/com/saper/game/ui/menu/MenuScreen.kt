@@ -34,8 +34,8 @@ import com.saper.game.data.Ranks
 import com.saper.game.data.SaperStore
 import com.saper.game.game.Difficulty
 import com.saper.game.ui.theme.ClassicButton
-import com.saper.game.ui.theme.ClassicTitleBar
-import com.saper.game.ui.theme.WindowPanel
+import com.saper.game.ui.game.ClassicColors
+import com.saper.game.ui.theme.closedCellSurface
 import com.saper.game.ui.theme.WindowInk
 import com.saper.game.ui.theme.classicBevel
 import com.saper.game.ui.game.formatTime
@@ -58,14 +58,20 @@ fun MenuScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .background(WindowPanel)
+            .background(ClassicColors.GrayBg)
             .safeDrawingPadding()
             .verticalScroll(rememberScrollState())
             .padding(12.dp)
-            .classicBevel(),
+            .classicBevel(inset = true)
+            .padding(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ClassicTitleBar("Сапёр")
+        Box(
+            Modifier.fillMaxWidth().closedCellSurface().padding(horizontal = 14.dp, vertical = 10.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text("⚑  Сапёр", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = WindowInk)
+        }
         Spacer(Modifier.height(12.dp))
         Text("Новая игра", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = WindowInk)
         Text("Логика без угадывания", fontSize = 14.sp, color = WindowInk)
@@ -110,7 +116,7 @@ private fun RankCard(xp: Int) {
     Column(
         Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF8F7EF))
+            .background(Color(0xFFD8D8D8))
             .classicBevel(inset = true)
             .padding(12.dp)
     ) {
@@ -146,8 +152,7 @@ private fun DifficultyButton(title: String, size: String, record: String, onClic
     Column(
         Modifier
             .fillMaxWidth()
-            .background(WindowPanel)
-            .classicBevel()
+            .closedCellSurface()
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
