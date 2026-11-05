@@ -1,8 +1,6 @@
 package com.saper.game.ui.settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.saper.game.data.AppSettings
-import com.saper.game.ui.game.ClassicColors
+import com.saper.game.ui.theme.ClassicTitleBar
+import com.saper.game.ui.theme.WindowPanel
+import com.saper.game.ui.theme.classicBevel
 import com.saper.game.ui.game.LongPressViewConfiguration
 
 /** Настройки: время зажатия флажка, вибрация, разбор после проигрыша. */
@@ -45,22 +45,12 @@ fun SettingsScreen(settings: AppSettings, onBack: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(ClassicColors.GrayBg)
+            .background(WindowPanel)
             .safeDrawingPadding()
             .padding(horizontal = 20.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "← Меню",
-            fontSize = 18.sp,
-            color = Color(0xFF202060),
-            modifier = Modifier
-                .clickable { onBack() }
-                .padding(vertical = 4.dp)
-        )
-        Spacer(Modifier.height(8.dp))
-        Text("НАСТРОЙКИ", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        ClassicTitleBar("Настройки", onMenu = onBack)
         Spacer(Modifier.height(20.dp))
 
         Text("Флажок: задержка пальца", fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -110,8 +100,8 @@ private fun PracticeCell(longPressMs: Int) {
             Modifier
                 .fillMaxWidth()
                 .height(72.dp)
-                .background(Color(0xFFD6D6D6))
-                .border(2.dp, ClassicColors.BevelDark)
+                .background(Color(0xFFF8F7EF))
+                .classicBevel()
                 .clipToBounds()
                 .pointerInput(longPressMs) {
                     detectTapGestures(
@@ -134,7 +124,7 @@ private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, fontSize = 16.sp, modifier = Modifier.weight(1f))
+        Text(label, fontSize = 16.sp, modifier = Modifier.weight(1f).padding(end = 10.dp))
         Switch(checked = checked, onCheckedChange = onChange)
     }
 }

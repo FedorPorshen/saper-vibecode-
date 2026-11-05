@@ -1,9 +1,9 @@
 package com.saper.game.ui.stats
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -30,7 +29,9 @@ import com.saper.game.data.DifficultySummary
 import com.saper.game.data.GameResultEntity
 import com.saper.game.data.SaperStore
 import com.saper.game.game.Difficulty
-import com.saper.game.ui.game.ClassicColors
+import com.saper.game.ui.theme.ClassicTitleBar
+import com.saper.game.ui.theme.WindowPanel
+import com.saper.game.ui.theme.classicBevel
 import com.saper.game.ui.game.formatTime
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -50,22 +51,12 @@ fun StatsScreen(onBack: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(ClassicColors.GrayBg)
+            .background(WindowPanel)
             .safeDrawingPadding()
             .padding(horizontal = 20.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "← Меню",
-            fontSize = 18.sp,
-            color = Color(0xFF202060),
-            modifier = Modifier
-                .clickable { onBack() }
-                .padding(vertical = 4.dp)
-        )
-        Spacer(Modifier.height(8.dp))
-        Text("РЕКОРДЫ", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        ClassicTitleBar("Рекорды", onMenu = onBack)
 
         for (d in Difficulty.entries) {
             Spacer(Modifier.height(12.dp))
@@ -96,7 +87,8 @@ private fun DifficultyBlock(d: Difficulty, s: DifficultySummary?) {
     Column(
         Modifier
             .fillMaxWidth()
-            .background(Color(0xFFD6D6D6))
+            .background(Color(0xFFF8F7EF))
+            .classicBevel(inset = true)
             .padding(12.dp)
     ) {
         Text(d.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -109,20 +101,14 @@ private val dateFormat = SimpleDateFormat("dd.MM HH:mm", Locale.getDefault())
 
 @Composable
 private fun RecentRow(r: GameResultEntity) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+    FlowRow(
+        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(if (r.won) "🏁" else "💥", fontSize = 16.sp)
-        Text(
-            " ${r.difficulty}  ${formatTime(r.timeSeconds)}",
-            fontSize = 15.sp,
-            fontWeight = if (r.won) FontWeight.Bold else FontWeight.Normal
-        )
-        if (r.hintsUsed > 0) Text(" 💡×${r.hintsUsed}", fontSize = 14.sp, color = Color(0xFF806020))
-        Spacer(Modifier.weight(1f))
-        Text(dateFormat.format(Date(r.finishedAt)), fontSize = 12.sp, color = Color(0xFF606060))
+        Text(r.difficulty, fontSize = 15.sp, fontWeight = if (r.won) FontWeight.Bold else FontWeight.Normal)
+        Text(formatTime(r.timeSeconds), fontSize = 15.sp)
+        if (r.hintsUsed > 0) Text("💡×${r.hintsUsed}", fontSize = 14.sp, color = Color(0xFF806020))
+        Text(dateFormat.format(Date(r.finishedAt)).replace(' ', ' '), fontSize = 13.sp, color = Color(0xFF606060))
     }
 }

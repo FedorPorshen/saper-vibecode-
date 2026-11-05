@@ -1,7 +1,6 @@
 package com.saper.game.ui.progress
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +30,9 @@ import androidx.compose.ui.unit.sp
 import com.saper.game.data.Achievements
 import com.saper.game.data.ProgressionStore
 import com.saper.game.data.Ranks
-import com.saper.game.ui.game.ClassicColors
+import com.saper.game.ui.theme.ClassicTitleBar
+import com.saper.game.ui.theme.WindowPanel
+import com.saper.game.ui.theme.classicBevel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -54,28 +55,19 @@ fun ProgressScreen(onBack: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(ClassicColors.GrayBg)
+            .background(WindowPanel)
             .safeDrawingPadding()
             .padding(horizontal = 20.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "← Меню",
-            fontSize = 18.sp,
-            color = Color(0xFF202060),
-            modifier = Modifier
-                .clickable { onBack() }
-                .padding(vertical = 4.dp)
-        )
-        Spacer(Modifier.height(8.dp))
-        Text("ПРОГРЕСС", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        ClassicTitleBar("Звания и достижения", onMenu = onBack)
 
         Spacer(Modifier.height(12.dp))
         Column(
             Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFD6D6D6))
+                .background(Color(0xFFF8F7EF))
+                .classicBevel(inset = true)
                 .padding(12.dp)
         ) {
             Text("⛑ ${current.name}", fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -152,20 +144,17 @@ private fun RankRow(rank: com.saper.game.data.Rank, xp: Int, isCurrent: Boolean,
     ) {
         Text(if (obtained) "✅" else "🔒", fontSize = 18.sp)
         Column(Modifier.padding(start = 8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    rank.name + if (isCurrent) "  ← ты здесь" else "",
-                    fontSize = if (isCurrent) 17.sp else 15.sp,
-                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                    color = if (obtained) Color(0xFF202020) else Color(0xFF909090)
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    "${rank.xpRequired} XP",
-                    fontSize = 13.sp,
-                    color = Color(0xFF606060)
-                )
-            }
+            Text(
+                rank.name,
+                fontSize = if (isCurrent) 17.sp else 15.sp,
+                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                color = if (obtained) Color(0xFF202020) else Color(0xFF555555)
+            )
+            Text(
+                "${rank.xpRequired} XP" + if (isCurrent) " · Текущее звание" else "",
+                fontSize = 13.sp,
+                color = Color(0xFF606060)
+            )
             Text(
                 text = when {
                     obtained && obtainedAt != null -> "получено ${timeAgo(obtainedAt)}"

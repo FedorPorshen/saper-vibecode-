@@ -1,12 +1,11 @@
 package com.saper.game.ui.menu
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,7 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,7 +33,11 @@ import com.saper.game.data.ProgressionStore
 import com.saper.game.data.Ranks
 import com.saper.game.data.SaperStore
 import com.saper.game.game.Difficulty
-import com.saper.game.ui.game.ClassicColors
+import com.saper.game.ui.theme.ClassicButton
+import com.saper.game.ui.theme.ClassicTitleBar
+import com.saper.game.ui.theme.WindowPanel
+import com.saper.game.ui.theme.WindowInk
+import com.saper.game.ui.theme.classicBevel
 import com.saper.game.ui.game.formatTime
 
 /** Главный экран: звание со прогрессом, выбор сложности (с рекордами) и навигация. */
@@ -54,15 +58,18 @@ fun MenuScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .background(ClassicColors.GrayBg)
+            .background(WindowPanel)
             .safeDrawingPadding()
-            .padding(horizontal = 20.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(12.dp)
+            .classicBevel(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(24.dp))
-        Text("САПЁР", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color(0xFF202020))
-        Text("решается логикой, а не угадыванием", fontSize = 13.sp, color = Color(0xFF505050))
-        Spacer(Modifier.height(16.dp))
+        ClassicTitleBar("Сапёр")
+        Spacer(Modifier.height(12.dp))
+        Text("Новая игра", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = WindowInk)
+        Text("Логика без угадывания", fontSize = 14.sp, color = WindowInk)
+        Spacer(Modifier.height(12.dp))
         // карточка звания кликабельна: полный список званий и дат
         Box(
             Modifier
@@ -84,19 +91,14 @@ fun MenuScreen(
             Spacer(Modifier.height(10.dp))
         }
 
-        Spacer(Modifier.weight(1f))
-
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            horizontalArrangement = Arrangement.Center
+        FlowRow(
+            Modifier.fillMaxWidth().padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            MenuLink("Звания", onProgress)
-            Spacer(Modifier.width(20.dp))
-            MenuLink("Рекорды", onStats)
-            Spacer(Modifier.width(20.dp))
-            MenuLink("Настройки", onSettings)
+            ClassicButton("Звания", onProgress)
+            ClassicButton("Рекорды", onStats)
+            ClassicButton("Настройки", onSettings)
         }
     }
 }
@@ -108,8 +110,8 @@ private fun RankCard(xp: Int) {
     Column(
         Modifier
             .fillMaxWidth()
-            .background(Color(0xFFD6D6D6))
-            .border(2.dp, ClassicColors.BevelDark)
+            .background(Color(0xFFF8F7EF))
+            .classicBevel(inset = true)
             .padding(12.dp)
     ) {
         Text("⛑ ${rank.name}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -127,7 +129,7 @@ private fun RankCard(xp: Int) {
                     Modifier
                         .fillMaxWidth(fraction)
                         .fillMaxHeight()
-                        .background(Color(0xFF308030))
+                        .background(Color(0xFF5BAF27))
                 )
             }
             Text(
@@ -144,27 +146,15 @@ private fun DifficultyButton(title: String, size: String, record: String, onClic
     Column(
         Modifier
             .fillMaxWidth()
-            .background(Color(0xFFD6D6D6))
-            .border(2.dp, ClassicColors.BevelDark)
+            .background(WindowPanel)
+            .classicBevel()
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(size, fontSize = 13.sp, color = Color(0xFF404040))
             Text(record, fontSize = 13.sp, color = Color(0xFF802020), fontWeight = FontWeight.Bold)
         }
     }
-}
-
-@Composable
-private fun MenuLink(text: String, onClick: () -> Unit) {
-    Text(
-        text = text,
-        fontSize = 18.sp,
-        color = Color(0xFF202060),
-        modifier = Modifier
-            .clickable { onClick() }
-            .padding(8.dp)
-    )
 }
