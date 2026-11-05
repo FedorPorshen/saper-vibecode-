@@ -1,6 +1,6 @@
 # Сапёр для Android
 
-**[Скачать Сапёр 1.1 (.apk)](https://raw.githubusercontent.com/FedorPorshen/saper-vibecode-/main/Saper-1.1.apk)**
+**[Скачать Сапёр 1.2 (.apk)](https://raw.githubusercontent.com/FedorPorshen/saper-vibecode-/main/Saper-1.2.apk)**
 
 Поддерживается Android 7.0 и новее. Откройте скачанный APK на телефоне и, если Android попросит, разрешите установку приложений из источника, в котором вы открыли файл.
 

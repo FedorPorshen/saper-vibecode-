@@ -170,10 +170,10 @@ class Solver(private val board: Board) {
                         val mineNeighbors = neighborIndices(origin)
                             .filter { knowledge[yOf(it)][xOf(it)] == Knowledge.MINE }
                             .map { xOf(it) to yOf(it) }
-                        val ox = xOf(origin) + 1
-                        val oy = yOf(origin) + 1
                         safeReasons[i] = HintReason(
-                            "Все ${c.number} мин вокруг цифры (${ox},${oy}) уже найдены — остальные её соседи чисты.",
+                            "Цифра ${c.number} в синей рамке показывает, сколько мин рядом. " +
+                                "Красные рамки уже отмечают все эти мины. " +
+                                "Значит, в жёлтой клетке мины нет.",
                             numberCells = listOf(xOf(origin) to yOf(origin)),
                             mineCells = mineNeighbors
                         )
@@ -201,12 +201,10 @@ class Solver(private val board: Board) {
                     diffCount == 0 -> for (i in diff) {
                         if (setSafe(i, queue)) {
                             progress = true
-                            val ax = xOf(small.origin) + 1
-                            val ay = yOf(small.origin) + 1
-                            val bx = xOf(big.origin) + 1
-                            val by = yOf(big.origin) + 1
                             safeReasons[i] = HintReason(
-                                "Цифры (${ax},${ay}) и (${bx},${by}) ждут ещё по ${small.mineCount} мин, и все необъяснённые соседи первой есть у второй — мины второй обязаны лежать у первой, остальным её соседям мина не достанется.",
+                                "Обе цифры в синих рамках показывают, что рядом осталось поровну мин. " +
+                                    "Все оставшиеся мины рядом с ними должны быть в их общих закрытых клетках. " +
+                                    "Жёлтая клетка соседствует только с одной из этих цифр, поэтому она безопасна.",
                                 numberCells = listOf(xOf(small.origin) to yOf(small.origin), xOf(big.origin) to yOf(big.origin))
                             )
                         }

@@ -49,13 +49,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,10 +63,11 @@ import com.saper.game.data.AppSettings
 import com.saper.game.data.GameFinishBonus
 import com.saper.game.data.ProgressionStore
 import com.saper.game.data.SaperStore
+import com.saper.game.game.CellState
 import com.saper.game.game.Difficulty
 import com.saper.game.game.HINT_PENALTY_SECONDS
 import com.saper.game.game.LampResult
-import com.saper.game.ui.theme.ClassicTitleBar
+import com.saper.game.ui.theme.ClassicButton
 import com.saper.game.ui.theme.WindowPanel
 import com.saper.game.ui.theme.classicBevel
 
@@ -116,12 +117,24 @@ fun GameScreen(difficulty: Difficulty, settings: AppSettings, onExit: () -> Unit
     Column(
         Modifier
             .fillMaxSize()
-            .background(WindowPanel)
+            .background(ClassicColors.GrayBg)
             .safeDrawingPadding()
             .padding(6.dp)
             .classicBevel()
     ) {
-        ClassicTitleBar(difficulty.title, onMenu = { showExitDialog = true })
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ClassicButton("Меню") { showExitDialog = true }
+            Text(
+                difficulty.title,
+                Modifier.weight(1f).padding(start = 12.dp),
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
         ClassicTopBar(controller)
         Box(
             Modifier
@@ -146,17 +159,26 @@ fun GameScreen(difficulty: Difficulty, settings: AppSettings, onExit: () -> Unit
             enter = fadeIn(tween(120)),
             exit = fadeOut(tween(120))
         ) {
-            controller.lampReason?.let { reason ->
-                Text(
-                    text = "💡 " + reason.text,
-                    fontSize = 13.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
+            val reason = controller.lampReason
+            val target = controller.lampHint
+            if (reason != null && target != null) {
+                val flagged = controller.engine?.board?.get(target.first, target.second)?.state == CellState.FLAGGED
+                Column(
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 5.dp, vertical = 4.dp)
                         .background(Color(0xFFFFF3B0))
-                        .border(1.dp, Color(0xFFC0A020))
-                        .padding(8.dp)
-                )
+                        .classicBevel(inset = true)
+                        .heightIn(max = 150.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(10.dp)
+                ) {
+                    Text(
+                        if (flagged) "Сними флажок с жёлтой клетки" else "Открой клетку в жёлтой рамке",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(reason.text, fontSize = 14.sp)
+                }
             }
         }
         AssistBar(controller, context)
@@ -195,31 +217,69 @@ private fun ClassicTopBar(controller: GameController) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LedCounter(controller.mineDisplay)
+        val mines = controller.mineDisplay.coerceIn(-99, 999)
+        val mineDigits = if (mines < 0) "-" + (-mines).toString().padStart(2, '0')
+        else mines.toString().padStart(3, '0')
+        LedCounter(mineDigits, "Мины: $mines")
         SmileyButton(controller)
-        LedCounter(controller.elapsedSeconds.coerceAtMost(999))
+        val elapsed = controller.elapsedSeconds.coerceAtMost(5999)
+        val time = (elapsed / 60).toString().padStart(2, '0') + ":" +
+            (elapsed % 60).toString().padStart(2, '0')
+        LedCounter(time, "Время: $time")
     }
 }
 
-/** Табло в стиле виндового сапёра: красные цифры на чёрном. */
+// Порядок сегментов: верхний, правые, нижний, левые, средний.
+private val LedSegments = listOf(
+    "1111110", "0110000", "1101101", "1111001", "0110011",
+    "1011011", "1011111", "1110000", "1111111", "1111011"
+)
+
 @Composable
-private fun LedCounter(value: Int) {
-    val v = value.coerceIn(-99, 999)
-    Box(
-        Modifier
-            .background(Color.Black)
+private fun LedCounter(digits: String, label: String) {
+    val units = digits.length * 11 - digits.count { it == ':' } * 7
+    Canvas(
+        Modifier.background(Color.Black)
             .classicBevel(inset = true)
-            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .semantics { contentDescription = label }
+            .padding(5.dp)
+            .size((units * 2).dp, 36.dp)
     ) {
-        Text(
-            text = "%03d".format(v),
-            color = Color(0xFFFF3333),
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            maxLines = 1,
-            softWrap = false
-        )
+        val pixel = minOf(size.width / units, size.height / 18)
+        var x = (size.width - units * pixel) / 2
+        val y = (size.height - 18 * pixel) / 2
+        val lit = Color(0xFFFF241A)
+        val unlit = Color(0xFF380600)
+
+        fun segment(dx: Int, dy: Int, vertical: Boolean, active: Boolean) {
+            val points = listOf(0 to 1, 1 to 0, 6 to 0, 7 to 1, 6 to 2, 1 to 2)
+            val path = Path()
+            for ((index, point) in points.withIndex()) {
+                val px = x + (dx + if (vertical) point.second else point.first) * pixel
+                val py = y + (dy + if (vertical) point.first else point.second) * pixel
+                if (index == 0) path.moveTo(px, py) else path.lineTo(px, py)
+            }
+            path.close()
+            drawPath(path, if (active) lit else unlit)
+        }
+
+        for (digit in digits) {
+            if (digit == ':') {
+                drawRect(lit, Offset(x + pixel, y + 5 * pixel), Size(2 * pixel, 2 * pixel))
+                drawRect(lit, Offset(x + pixel, y + 11 * pixel), Size(2 * pixel, 2 * pixel))
+                x += 4 * pixel
+                continue
+            }
+            val mask = if (digit == '-') "0000001" else LedSegments[digit.digitToInt()]
+            segment(2, 0, false, mask[0] == '1')
+            segment(8, 1, true, mask[1] == '1')
+            segment(8, 9, true, mask[2] == '1')
+            segment(2, 16, false, mask[3] == '1')
+            segment(0, 9, true, mask[4] == '1')
+            segment(0, 1, true, mask[5] == '1')
+            segment(2, 8, false, mask[6] == '1')
+            x += 11 * pixel
+        }
     }
 }
 
@@ -291,7 +351,7 @@ private fun AssistBar(controller: GameController, context: Context) {
             ) {
                 when (controller.lamp()) {
                     LampResult.NoLogicalMove ->
-                        Toast.makeText(context, "Логического хода нет — думай сам", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Лампочка пока не нашла безопасную клетку", Toast.LENGTH_SHORT).show()
                     else -> {}
                 }
             }
